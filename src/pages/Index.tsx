@@ -2,12 +2,43 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import ProductCard from "@/components/ProductCard";
 import EventCard from "@/components/EventCard";
-import { ArrowRight, ShoppingBag, Calendar, Users, Award } from "lucide-react";
+import { ArrowRight, ShoppingBag, Calendar, Users, Award, Star, TrendingUp, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 
-// Données de démonstration
+// Données de démonstration pour les carrousels
+const heroSlides = [
+  {
+    id: 1,
+    title: "Découvrez les Produits Locaux",
+    subtitle: "Plus de 2,500 produits artisanaux et locaux",
+    description: "Soutenez l'économie locale en achetant directement auprès de nos artisans et producteurs",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=400&fit=crop",
+    cta: "Explorer la boutique",
+    ctaLink: "/boutique"
+  },
+  {
+    id: 2,
+    title: "Événements 5 à 7",
+    subtitle: "Networking et développement professionnel",
+    description: "Participez à nos événements pour développer votre réseau et découvrir de nouvelles opportunités",
+    image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=400&fit=crop",
+    cta: "Voir les événements",
+    ctaLink: "/evenements"
+  },
+  {
+    id: 3,
+    title: "Devenez Exposant",
+    subtitle: "Vendez vos produits en ligne",
+    description: "Rejoignez notre communauté d'exposants et développez votre activité",
+    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=400&fit=crop",
+    cta: "Devenir exposant",
+    ctaLink: "/exposants"
+  }
+];
+
 const featuredProducts = [
   {
     id: 1,
@@ -37,6 +68,25 @@ const featuredProducts = [
     category: "Artisanat",
     exhibitor: "Perles & Co",
     isNew: true
+  },
+  {
+    id: 4,
+    name: "Savon naturel au karité",
+    image: "/placeholder.svg",
+    originalPrice: 3000,
+    category: "Cosmétiques",
+    exhibitor: "Karité Bio",
+    isNew: false
+  },
+  {
+    id: 5,
+    name: "Panier en osier tressé",
+    image: "/placeholder.svg",
+    originalPrice: 12000,
+    promoPrice: 9000,
+    category: "Artisanat",
+    exhibitor: "Artisans Unis",
+    isNew: true
   }
 ];
 
@@ -63,38 +113,91 @@ const upcomingEvents = [
     capacity: 200,
     registered: 145,
     image: "/placeholder.svg"
+  },
+  {
+    id: 3,
+    title: "Atelier Marketing Digital",
+    date: "Dimanche 17 Mars 2024",
+    time: "10h - 16h",
+    location: "Hôtel Splendid, Ouagadougou",
+    description: "Formation pratique sur les stratégies de marketing digital pour PME.",
+    sponsor: "Digital Marketing BF",
+    capacity: 50,
+    registered: 32,
+    image: "/placeholder.svg"
+  }
+];
+
+const testimonials = [
+  {
+    id: 1,
+    name: "Aminata SANKARA",
+    role: "Fondatrice, Sankara Cosmetics",
+    content: "Grâce à la plateforme 5 à 7, j'ai pu développer mon réseau et augmenter mes ventes de 300% en 6 mois.",
+    avatar: "/placeholder.svg",
+    rating: 5
+  },
+  {
+    id: 2,
+    name: "Ibrahim OUEDRAOGO",
+    role: "CEO, Tech Solutions BF",
+    content: "Les événements networking m'ont permis de trouver des partenaires stratégiques pour mon entreprise.",
+    avatar: "/placeholder.svg",
+    rating: 5
+  },
+  {
+    id: 3,
+    name: "Fatou TRAORE",
+    role: "Directrice, AgriPro",
+    content: "Une plateforme exceptionnelle qui valorise vraiment l'entrepreneuriat local au Burkina Faso.",
+    avatar: "/placeholder.svg",
+    rating: 5
   }
 ];
 
 const Index = () => {
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary to-blue-600 text-white py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Bienvenue au <span className="text-yellow-300">5 à 7</span>
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
-              La plateforme qui connecte entrepreneurs, artisans et consommateurs pour valoriser l'économie locale
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" asChild>
-                <Link to="/boutique">
-                  <ShoppingBag className="mr-2 h-5 w-5" />
-                  Découvrir la boutique
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-primary" asChild>
-                <Link to="/evenements">
-                  <Calendar className="mr-2 h-5 w-5" />
-                  Voir les événements
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Hero Carousel */}
+      <section className="relative">
+        <Carousel className="w-full">
+          <CarouselContent>
+            {heroSlides.map((slide) => (
+              <CarouselItem key={slide.id}>
+                <div className="relative h-[600px] bg-gradient-to-r from-primary to-blue-600 text-white overflow-hidden">
+                  <div className="absolute inset-0 bg-black/20"></div>
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${slide.image})` }}
+                  ></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-blue-600/90"></div>
+                  
+                  <div className="relative container mx-auto px-4 h-full flex items-center">
+                    <div className="max-w-2xl">
+                      <Badge variant="secondary" className="mb-4">
+                        {slide.subtitle}
+                      </Badge>
+                      <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                        {slide.title}
+                      </h1>
+                      <p className="text-xl mb-8 opacity-90">
+                        {slide.description}
+                      </p>
+                      <Button size="lg" variant="secondary" asChild>
+                        <Link to={slide.ctaLink}>
+                          {slide.cta}
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-4" />
+          <CarouselNext className="right-4" />
+        </Carousel>
       </section>
 
       {/* Stats Section */}
@@ -121,7 +224,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Featured Products Carousel */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-8">
@@ -133,11 +236,17 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {featuredProducts.map((product) => (
+                <CarouselItem key={product.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                  <ProductCard {...product} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
       </section>
 
@@ -153,16 +262,68 @@ const Index = () => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {upcomingEvents.map((event) => (
-              <EventCard key={event.id} {...event} />
-            ))}
+          <Carousel className="w-full">
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {upcomingEvents.map((event) => (
+                <CarouselItem key={event.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/2">
+                  <EventCard {...event} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* Testimonials Carousel */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Ce que disent nos membres</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Découvrez les témoignages de nos entrepreneurs qui ont réussi grâce à notre plateforme
+            </p>
           </div>
+          
+          <Carousel className="w-full max-w-4xl mx-auto">
+            <CarouselContent>
+              {testimonials.map((testimonial) => (
+                <CarouselItem key={testimonial.id}>
+                  <Card className="mx-4">
+                    <CardContent className="pt-8 text-center">
+                      <div className="flex justify-center mb-4">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="h-5 w-5 text-yellow-500 fill-current" />
+                        ))}
+                      </div>
+                      <blockquote className="text-lg italic mb-6">
+                        "{testimonial.content}"
+                      </blockquote>
+                      <div className="flex items-center justify-center gap-4">
+                        <img
+                          src={testimonial.avatar}
+                          alt={testimonial.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="text-left">
+                          <div className="font-semibold">{testimonial.name}</div>
+                          <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
       </section>
 
       {/* Call to Action Sections */}
-      <section className="py-16">
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="text-center p-6">
