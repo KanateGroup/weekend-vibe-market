@@ -83,7 +83,6 @@ const EventCard = ({
         });
       }
     } catch (error) {
-      console.error('Error registering for event:', error);
       toast({
         title: "Erreur d'inscription",
         description: "Une erreur est survenue lors de l'inscription.",
@@ -196,15 +195,6 @@ const EventCard = ({
                 <div>
                   <h4 className="font-semibold mb-2">Description</h4>
                   <p className="text-sm">{description}</p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2 text-blue-800">Informations importantes</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• L'événement dure 3 jours complets (vendredi à dimanche)</li>
-                    <li>• Tous les jours se déroulent au même lieu</li>
-                    <li>• Votre inscription couvre les 3 jours</li>
-                    <li>• Présence recommandée tous les jours</li>
-                  </ul>
                 </div>
               </div>
             </DialogContent>

@@ -1,17 +1,28 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import EventCard from "@/components/EventCard";
-import { Calendar, MapPin, Users, Clock, Plus } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Star, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { Tables } from "@/integrations/supabase/types";
 
-type Event = Tables<'events'>;
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  start_date: string;
+  end_date: string;
+  max_participants: number;
+  image_url: string;
+  sponsor: string;
+  created_at: string;
+}
 
 const Events = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -36,19 +47,15 @@ const Events = () => {
   }, []);
 
   const checkAdminStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        setIsAdmin(profile?.role === 'admin');
-      }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      setIsAdmin(profile?.role === 'admin');
     }
   };
 
@@ -64,20 +71,19 @@ const Events = () => {
       setEvents(eventsData || []);
 
       // Récupérer le nombre d'inscriptions pour chaque événement
-      if (eventsData && eventsData.length > 0) {
-        const eventIds = eventsData.map((event) => event.id);
+      const eventIds = eventsData?.map(event => event.id) || [];
+      if (eventIds.length > 0) {
         const { data: registrations } = await supabase
           .from('event_registrations')
           .select('event_id');
 
         const counts: {[key: string]: number} = {};
-        registrations?.forEach((reg) => {
+        registrations?.forEach(reg => {
           counts[reg.event_id] = (counts[reg.event_id] || 0) + 1;
         });
         setRegistrationCounts(counts);
       }
     } catch (error) {
-      console.error('Error fetching events:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les événements.",
@@ -125,7 +131,6 @@ const Events = () => {
       // Recharger les événements
       fetchEvents();
     } catch (error) {
-      console.error('Error creating event:', error);
       toast({
         title: "Erreur",
         description: "Impossible de créer l'événement.",
@@ -296,8 +301,8 @@ const Events = () => {
                   time="3 jours complets"
                   location={event.location}
                   description={event.description || ''}
-                  sponsor={event.sponsor || undefined}
-                  capacity={event.max_participants || 100}
+                  sponsor={event.sponsor}
+                  capacity={event.max_participants}
                   registered={registrationCounts[event.id] || 0}
                   image={event.image_url || '/placeholder.svg'}
                   startDate={event.start_date}
@@ -344,8 +349,8 @@ const Events = () => {
                     time="3 jours complets"
                     location={event.location}
                     description={event.description || ''}
-                    sponsor={event.sponsor || undefined}
-                    capacity={event.max_participants || 100}
+                    sponsor={event.sponsor}
+                    capacity={event.max_participants}
                     registered={registrationCounts[event.id] || 0}
                     image={event.image_url || '/placeholder.svg'}
                     startDate={event.start_date}
