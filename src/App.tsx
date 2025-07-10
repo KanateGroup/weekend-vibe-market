@@ -9,6 +9,7 @@ import Header from "./components/Layout/Header";
 import Footer from "./components/Layout/Footer";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
+import Cart from "./pages/Cart";
 import Events from "./pages/Events";
 import Exhibitors from "./pages/Exhibitors";
 import VirtualFair from "./pages/VirtualFair";
@@ -33,6 +34,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/boutique" element={<Shop />} />
+                <Route path="/panier" element={<Cart />} />
                 <Route path="/evenements" element={<Events />} />
                 <Route path="/exposants" element={<Exhibitors />} />
                 <Route path="/foire-virtuelle" element={<VirtualFair />} />

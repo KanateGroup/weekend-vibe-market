@@ -1,157 +1,146 @@
 
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Menu, ShoppingCart, User, Search, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, ShoppingBag, Calendar, Users, Award, Store, User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
   const { user, signOut } = useAuth();
+  const [cartItemsCount, setCartItemsCount] = useState(0);
+
+  useEffect(() => {
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const totalItems = cart.reduce((total: number, item: any) => total + item.quantity, 0);
+      setCartItemsCount(totalItems);
+    };
+
+    // Initial load
+    updateCartCount();
+
+    // Listen for storage changes
+    window.addEventListener('storage', updateCartCount);
+    
+    // Custom event for cart updates from the same tab
+    window.addEventListener('cartUpdated', updateCartCount);
+
+    return () => {
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('cartUpdated', updateCartCount);
+    };
+  }, []);
 
   const navigation = [
-    { name: 'Accueil', href: '/', icon: null },
-    { name: 'Boutique', href: '/boutique', icon: ShoppingBag },
-    { name: 'Événements', href: '/evenements', icon: Calendar },
-    { name: 'Exposants', href: '/exposants', icon: Users },
-    { name: 'Foire Virtuelle', href: '/foire-virtuelle', icon: Store },
-    { name: 'Parrainage', href: '/parrainage', icon: Award },
+    { name: "Accueil", href: "/" },
+    { name: "Boutique", href: "/boutique" },
+    { name: "Événements", href: "/evenements" },
+    { name: "Exposants", href: "/exposants" },
+    { name: "Foire Virtuelle", href: "/foire-virtuelle" },
+    { name: "Parrainage", href: "/parrainage" },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
-
   return (
-    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-primary text-white p-2 rounded-lg">
-              <span className="text-xl font-bold">5à7</span>
-            </div>
-            <span className="font-bold text-lg hidden sm:block">Plateforme 5 à 7</span>
-          </Link>
+          <div className="flex items-center">
+            <a href="/" className="text-2xl font-bold text-primary">
+              FoireDuTerroir
+            </a>
+          </div>
 
           {/* Navigation Desktop */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'bg-primary text-white'
-                      : 'text-gray-700 hover:text-primary hover:bg-primary/10'
-                  }`}
-                >
-                  {Icon && <Icon className="h-4 w-4" />}
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navigation.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                className="text-gray-700 hover:text-primary transition-colors font-medium"
+              >
+                {item.name}
+              </a>
+            ))}
           </nav>
 
-          {/* Auth & Mobile Menu */}
+          {/* Actions */}
           <div className="flex items-center space-x-4">
+            {/* Cart */}
+            <Button variant="outline" size="sm" asChild className="relative">
+              <a href="/panier">
+                <ShoppingCart className="h-4 w-4" />
+                {cartItemsCount > 0 && (
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                    {cartItemsCount}
+                  </Badge>
+                )}
+              </a>
+            </Button>
+
+            {/* User Menu */}
             {user ? (
-              <div className="hidden md:flex items-center space-x-4">
-                <Link to="/tableau-bord">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <User className="h-4 w-4 mr-2" />
-                    Tableau de bord
+                    {user.email?.split('@')[0]}
                   </Button>
-                </Link>
-                <Button variant="ghost" size="sm" onClick={signOut}>
-                  Déconnexion
-                </Button>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <a href="/tableau-bord">
+                      <User className="h-4 w-4 mr-2" />
+                      Mon compte
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Se déconnecter
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center space-x-2">
-                <Link to="/connexion">
-                  <Button variant="outline" size="sm">Connexion</Button>
-                </Link>
-                <Link to="/inscription">
-                  <Button size="sm">Inscription</Button>
-                </Link>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href="/connexion">Connexion</a>
+                </Button>
+                <Button size="sm" asChild>
+                  <a href="/inscription">Inscription</a>
+                </Button>
               </div>
             )}
 
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Mobile Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="md:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {navigation.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <a href={item.href}>{item.name}</a>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t">
-            <nav className="flex flex-col space-y-2">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive(item.href)
-                        ? 'bg-primary text-white'
-                        : 'text-gray-700 hover:text-primary hover:bg-primary/10'
-                    }`}
-                  >
-                    {Icon && <Icon className="h-4 w-4" />}
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
-              
-              <div className="pt-4 border-t space-y-2">
-                {user ? (
-                  <>
-                    <Link to="/tableau-bord" onClick={() => setIsMenuOpen(false)}>
-                      <Button variant="outline" size="sm" className="w-full justify-start">
-                        <User className="h-4 w-4 mr-2" />
-                        Tableau de bord
-                      </Button>
-                    </Link>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        signOut();
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Déconnexion
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/connexion" onClick={() => setIsMenuOpen(false)}>
-                      <Button variant="outline" size="sm" className="w-full">
-                        Connexion
-                      </Button>
-                    </Link>
-                    <Link to="/inscription" onClick={() => setIsMenuOpen(false)}>
-                      <Button size="sm" className="w-full">
-                        Inscription
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
-            </nav>
-          </div>
-        )}
       </div>
     </header>
   );

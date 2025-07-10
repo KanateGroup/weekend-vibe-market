@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +51,9 @@ const ProductCard = ({
     
     localStorage.setItem('cart', JSON.stringify(cart));
     setIsInCart(true);
+    
+    // Déclencher un événement personnalisé pour mettre à jour le compteur du panier
+    window.dispatchEvent(new Event('cartUpdated'));
     
     toast({
       title: "Produit ajouté !",
