@@ -59,7 +59,7 @@ const EventCard = ({
       }
 
       const { error } = await supabase
-        .from('event_registrations' as any)
+        .from('event_registrations')
         .insert({
           event_id: id,
           user_id: user.id

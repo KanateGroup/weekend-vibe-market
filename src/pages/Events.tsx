@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,19 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  start_date: string;
-  end_date: string;
-  max_participants: number;
-  image_url: string;
-  sponsor: string;
-  created_at: string;
-}
+type Event = Tables<'events'>;
 
 const Events = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -51,7 +40,7 @@ const Events = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
-          .from('profiles' as any)
+          .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
@@ -66,7 +55,7 @@ const Events = () => {
   const fetchEvents = async () => {
     try {
       const { data: eventsData, error } = await supabase
-        .from('events' as any)
+        .from('events')
         .select('*')
         .order('start_date', { ascending: true });
 
@@ -76,13 +65,13 @@ const Events = () => {
 
       // Récupérer le nombre d'inscriptions pour chaque événement
       if (eventsData && eventsData.length > 0) {
-        const eventIds = eventsData.map((event: any) => event.id);
+        const eventIds = eventsData.map((event) => event.id);
         const { data: registrations } = await supabase
-          .from('event_registrations' as any)
+          .from('event_registrations')
           .select('event_id');
 
         const counts: {[key: string]: number} = {};
-        registrations?.forEach((reg: any) => {
+        registrations?.forEach((reg) => {
           counts[reg.event_id] = (counts[reg.event_id] || 0) + 1;
         });
         setRegistrationCounts(counts);
@@ -109,7 +98,7 @@ const Events = () => {
       endDate.setDate(startDate.getDate() + 2); // 3 jours au total (vendredi à dimanche)
 
       const { error } = await supabase
-        .from('events' as any)
+        .from('events')
         .insert({
           ...newEvent,
           end_date: endDate.toISOString().split('T')[0]
@@ -307,8 +296,8 @@ const Events = () => {
                   time="3 jours complets"
                   location={event.location}
                   description={event.description || ''}
-                  sponsor={event.sponsor}
-                  capacity={event.max_participants}
+                  sponsor={event.sponsor || undefined}
+                  capacity={event.max_participants || 100}
                   registered={registrationCounts[event.id] || 0}
                   image={event.image_url || '/placeholder.svg'}
                   startDate={event.start_date}
@@ -355,8 +344,8 @@ const Events = () => {
                     time="3 jours complets"
                     location={event.location}
                     description={event.description || ''}
-                    sponsor={event.sponsor}
-                    capacity={event.max_participants}
+                    sponsor={event.sponsor || undefined}
+                    capacity={event.max_participants || 100}
                     registered={registrationCounts[event.id] || 0}
                     image={event.image_url || '/placeholder.svg'}
                     startDate={event.start_date}
