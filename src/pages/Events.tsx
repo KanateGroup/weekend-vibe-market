@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import EventCard from "@/components/EventCard";
-import { Calendar, MapPin, Users, Clock, Star, Plus } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -47,22 +47,26 @@ const Events = () => {
   }, []);
 
   const checkAdminStatus = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      setIsAdmin(profile?.role === 'admin');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles' as any)
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        setIsAdmin(profile?.role === 'admin');
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
     }
   };
 
   const fetchEvents = async () => {
     try {
       const { data: eventsData, error } = await supabase
-        .from('events')
+        .from('events' as any)
         .select('*')
         .order('start_date', { ascending: true });
 
@@ -71,19 +75,20 @@ const Events = () => {
       setEvents(eventsData || []);
 
       // Récupérer le nombre d'inscriptions pour chaque événement
-      const eventIds = eventsData?.map(event => event.id) || [];
-      if (eventIds.length > 0) {
+      if (eventsData && eventsData.length > 0) {
+        const eventIds = eventsData.map((event: any) => event.id);
         const { data: registrations } = await supabase
-          .from('event_registrations')
+          .from('event_registrations' as any)
           .select('event_id');
 
         const counts: {[key: string]: number} = {};
-        registrations?.forEach(reg => {
+        registrations?.forEach((reg: any) => {
           counts[reg.event_id] = (counts[reg.event_id] || 0) + 1;
         });
         setRegistrationCounts(counts);
       }
     } catch (error) {
+      console.error('Error fetching events:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les événements.",
@@ -104,7 +109,7 @@ const Events = () => {
       endDate.setDate(startDate.getDate() + 2); // 3 jours au total (vendredi à dimanche)
 
       const { error } = await supabase
-        .from('events')
+        .from('events' as any)
         .insert({
           ...newEvent,
           end_date: endDate.toISOString().split('T')[0]
@@ -131,6 +136,7 @@ const Events = () => {
       // Recharger les événements
       fetchEvents();
     } catch (error) {
+      console.error('Error creating event:', error);
       toast({
         title: "Erreur",
         description: "Impossible de créer l'événement.",
