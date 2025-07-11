@@ -4,25 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import EventCard from "@/components/EventCard";
-import { Calendar, MapPin, Users, Clock, Star, Plus } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  start_date: string;
-  end_date: string;
-  max_participants: number;
-  image_url: string;
-  sponsor: string;
-  created_at: string;
-}
+type Event = Tables<'events'>;
 
 const Events = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -229,7 +219,7 @@ const Events = () => {
                   <div>
                     <label className="block text-sm font-medium mb-2">Parrain (optionnel)</label>
                     <Input
-                      value={newEvent.sponsor}
+                      value={newEvent.sponsor || ''}
                       onChange={(e) => setNewEvent({...newEvent, sponsor: e.target.value})}
                       placeholder="Nom du parrain"
                     />
@@ -301,7 +291,7 @@ const Events = () => {
                   time="3 jours complets"
                   location={event.location}
                   description={event.description || ''}
-                  sponsor={event.sponsor}
+                  sponsor={event.sponsor || undefined}
                   capacity={event.max_participants}
                   registered={registrationCounts[event.id] || 0}
                   image={event.image_url || '/placeholder.svg'}
@@ -349,7 +339,7 @@ const Events = () => {
                     time="3 jours complets"
                     location={event.location}
                     description={event.description || ''}
-                    sponsor={event.sponsor}
+                    sponsor={event.sponsor || undefined}
                     capacity={event.max_participants}
                     registered={registrationCounts[event.id] || 0}
                     image={event.image_url || '/placeholder.svg'}
