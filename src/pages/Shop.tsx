@@ -12,64 +12,61 @@ import { Search, Filter, Grid, List } from "lucide-react";
 // Données de démonstration
 const products = [
   {
-    id: "1",
-    title: "Sac à main artisanal en cuir",
-    price: 200,
+    id: 1,
+    name: "Sac à main artisanal en cuir",
     image: "/placeholder.svg",
+    originalPrice: 25000,
+    promoPrice: 20000,
     category: "Mode",
-    description: "Sac à main en cuir véritable fait à la main par des artisans locaux",
-    rating: 4.8,
-    inStock: true
+    exhibitor: "Maroquinerie Locale",
+    isNew: true
   },
   {
-    id: "2", 
-    title: "Miel bio du terroir",
-    price: 80,
+    id: 2,
+    name: "Miel bio du terroir",
     image: "/placeholder.svg",
+    originalPrice: 8000,
     category: "Alimentation",
-    description: "Miel 100% naturel récolté dans nos ruches locales",
-    rating: 4.9,
-    inStock: true
+    exhibitor: "Ruches d'Or",
+    isNew: false
   },
   {
-    id: "3",
-    title: "Bijoux en perles traditionnelles", 
-    price: 120,
+    id: 3,
+    name: "Bijoux en perles traditionnelles",
     image: "/placeholder.svg",
+    originalPrice: 15000,
+    promoPrice: 12000,
     category: "Artisanat",
-    description: "Bijoux faits main avec des perles traditionnelles",
-    rating: 4.7,
-    inStock: true
+    exhibitor: "Perles & Co",
+    isNew: true
   },
   {
-    id: "4",
-    title: "Savon naturel au karité",
-    price: 30,
-    image: "/placeholder.svg", 
+    id: 4,
+    name: "Savon naturel au karité",
+    image: "/placeholder.svg",
+    originalPrice: 3000,
     category: "Cosmétiques",
-    description: "Savon artisanal au beurre de karité bio",
-    rating: 4.6,
-    inStock: true
+    exhibitor: "Karité Bio",
+    isNew: false
   },
   {
-    id: "5",
-    title: "Panier en osier tressé",
-    price: 90,
+    id: 5,
+    name: "Panier en osier tressé",
     image: "/placeholder.svg",
-    category: "Artisanat", 
-    description: "Panier traditionnel tressé à la main",
-    rating: 4.5,
-    inStock: true
+    originalPrice: 12000,
+    promoPrice: 9000,
+    category: "Artisanat",
+    exhibitor: "Artisans Unis",
+    isNew: true
   },
   {
-    id: "6",
-    title: "Thé de moringa bio",
-    price: 50,
+    id: 6,
+    name: "Thé de moringa bio",
     image: "/placeholder.svg",
+    originalPrice: 5000,
     category: "Alimentation",
-    description: "Thé de moringa cultivé localement, riche en nutriments",
-    rating: 4.4,
-    inStock: false
+    exhibitor: "Moringa Plus",
+    isNew: false
   }
 ];
 
@@ -78,14 +75,16 @@ const categories = ["Toutes", "Mode", "Alimentation", "Artisanat", "Cosmétiques
 const Shop = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Toutes");
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 50000]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("name");
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.exhibitor.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "Toutes" || product.category === selectedCategory;
-    const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+    const matchesPrice = (product.promoPrice || product.originalPrice) >= priceRange[0] && 
+                        (product.promoPrice || product.originalPrice) <= priceRange[1];
     
     return matchesSearch && matchesCategory && matchesPrice;
   });
@@ -116,7 +115,7 @@ const Shop = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Nom du produit..."
+                      placeholder="Nom du produit, exposant..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -144,13 +143,13 @@ const Shop = () => {
                 {/* Price Range */}
                 <div>
                   <label className="text-sm font-medium mb-2 block">
-                    Prix: ${priceRange[0]} - ${priceRange[1]}
+                    Prix: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()} FCFA
                   </label>
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
-                    max={500}
-                    step={10}
+                    max={50000}
+                    step={1000}
                     className="mt-2"
                   />
                 </div>
@@ -177,7 +176,7 @@ const Shop = () => {
                     <SelectItem value="name">Nom</SelectItem>
                     <SelectItem value="price">Prix croissant</SelectItem>
                     <SelectItem value="price-desc">Prix décroissant</SelectItem>
-                    <SelectItem value="rating">Note</SelectItem>
+                    <SelectItem value="new">Nouveautés</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -221,7 +220,7 @@ const Shop = () => {
                   onClick={() => {
                     setSearchTerm("");
                     setSelectedCategory("Toutes");
-                    setPriceRange([0, 500]);
+                    setPriceRange([0, 50000]);
                   }}
                 >
                   Réinitialiser les filtres
