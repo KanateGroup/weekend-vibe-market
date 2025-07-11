@@ -1,219 +1,94 @@
 
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Heart, Eye } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ShoppingCart, Star } from "lucide-react";
 
 interface ProductCardProps {
-  id: number;
-  name: string;
+  id: string;
+  title: string;
+  price: number;
   image: string;
-  originalPrice: number;
-  promoPrice?: number;
   category: string;
-  exhibitor: string;
-  isNew?: boolean;
+  rating?: number;
+  description?: string;
+  inStock?: boolean;
 }
 
 const ProductCard = ({ 
-  id,
-  name, 
+  id, 
+  title, 
+  price, 
   image, 
-  originalPrice, 
-  promoPrice, 
   category, 
-  exhibitor, 
-  isNew 
+  rating = 4.5, 
+  description,
+  inStock = true 
 }: ProductCardProps) => {
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const { toast } = useToast();
-  
-  const hasPromo = promoPrice && promoPrice < originalPrice;
-  const finalPrice = promoPrice || originalPrice;
-  
-  const handleAddToCart = async () => {
-    try {
-      setIsAddingToCart(true);
-      
-      // Simuler l'ajout au panier
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Récupérer le panier existant du localStorage
-      const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
-      
-      // Vérifier si le produit est déjà dans le panier
-      const existingItem = existingCart.find((item: any) => item.id === id);
-      
-      if (existingItem) {
-        existingItem.quantity += 1;
-      } else {
-        existingCart.push({
-          id,
-          name,
-          image,
-          price: finalPrice,
-          quantity: 1,
-          exhibitor
-        });
-      }
-      
-      // Sauvegarder dans localStorage
-      localStorage.setItem('cart', JSON.stringify(existingCart));
-      
-      toast({
-        title: "Produit ajouté !",
-        description: `${name} a été ajouté à votre panier.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter le produit au panier.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAddingToCart(false);
-    }
+  const handleAddToCart = () => {
+    // Logique pour ajouter au panier
+    console.log(`Adding product ${id} to cart`);
+    
+    // Dispatch custom event pour notifier l'header
+    window.dispatchEvent(new CustomEvent('cartUpdated', { 
+      detail: { productId: id, action: 'add' } 
+    }));
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    toast({
-      title: isFavorite ? "Retiré des favoris" : "Ajouté aux favoris",
-      description: `${name} ${isFavorite ? "retiré de" : "ajouté à"} vos favoris.`,
-    });
-  };
-  
   return (
-    <Card className="group hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-      <div className="relative overflow-hidden">
+    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300">
+      <div className="aspect-square overflow-hidden">
         <img 
           src={image} 
-          alt={name}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          alt={title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        {isNew && (
-          <Badge className="absolute top-2 left-2 bg-green-500">
-            Nouveau
-          </Badge>
-        )}
-        {hasPromo && (
-          <Badge className="absolute top-2 right-2 bg-red-500">
-            -{Math.round((1 - promoPrice / originalPrice) * 100)}%
-          </Badge>
-        )}
-        <Button
-          size="icon"
-          variant="ghost"
-          className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white ${
-            hasPromo ? 'top-12' : ''
-          }`}
-          onClick={toggleFavorite}
-        >
-          <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-        </Button>
       </div>
       
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2">{name}</h3>
-        <p className="text-sm text-muted-foreground mb-2">Par {exhibitor}</p>
-        <Badge variant="secondary" className="text-xs mb-3">
-          {category}
-        </Badge>
-        
-        <div className="flex items-center gap-2">
-          {hasPromo ? (
-            <>
-              <span className="text-lg font-bold text-red-600">
-                {promoPrice?.toLocaleString()} FCFA
-              </span>
-              <span className="text-sm text-muted-foreground line-through">
-                {originalPrice.toLocaleString()} FCFA
-              </span>
-            </>
-          ) : (
-            <span className="text-lg font-bold">
-              {originalPrice.toLocaleString()} FCFA
-            </span>
+      <CardHeader className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary" className="text-xs">
+            {category}
+          </Badge>
+          {rating && (
+            <div className="flex items-center space-x-1">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-sm text-muted-foreground">{rating}</span>
+            </div>
           )}
         </div>
-      </CardContent>
+        
+        <CardTitle className="text-lg line-clamp-2">{title}</CardTitle>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-2xl font-bold text-primary">
+            ${price.toFixed(2)}
+          </span>
+          {!inStock && (
+            <Badge variant="destructive" className="text-xs">
+              Rupture de stock
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
       
-      <CardFooter className="p-4 pt-0 flex gap-2">
+      <CardContent className="space-y-4">
+        {description && (
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {description}
+          </p>
+        )}
+        
         <Button 
-          className="flex-1" 
-          size="sm"
           onClick={handleAddToCart}
-          disabled={isAddingToCart}
+          disabled={!inStock}
+          className="w-full"
+          variant={inStock ? "default" : "secondary"}
         >
           <ShoppingCart className="h-4 w-4 mr-2" />
-          {isAddingToCart ? "Ajout..." : "Ajouter au panier"}
+          {inStock ? "Ajouter au panier" : "Non disponible"}
         </Button>
-        
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Eye className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{name}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <img src={image} alt={name} className="w-full h-64 object-cover rounded-lg" />
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Exposant</h4>
-                  <p className="text-sm">{exhibitor}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Catégorie</h4>
-                  <p className="text-sm">{category}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Prix</h4>
-                  <div className="flex items-center gap-2">
-                    {hasPromo ? (
-                      <>
-                        <span className="text-lg font-bold text-red-600">
-                          {promoPrice?.toLocaleString()} FCFA
-                        </span>
-                        <span className="text-sm text-muted-foreground line-through">
-                          {originalPrice.toLocaleString()} FCFA
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-lg font-bold">
-                        {originalPrice.toLocaleString()} FCFA
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {isNew && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Statut</h4>
-                    <Badge className="bg-green-500">Nouveau produit</Badge>
-                  </div>
-                )}
-              </div>
-              <div className="pt-4">
-                <Button 
-                  className="w-full" 
-                  onClick={handleAddToCart}
-                  disabled={isAddingToCart}
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  {isAddingToCart ? "Ajout..." : "Ajouter au panier"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 };

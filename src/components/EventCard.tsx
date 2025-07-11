@@ -1,12 +1,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Users, Clock } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Calendar, Users, Clock, UserPlus, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EventCardProps {
   id: string;
@@ -19,186 +19,203 @@ interface EventCardProps {
   capacity: number;
   registered: number;
   image: string;
-  startDate?: string;
-  endDate?: string;
+  startDate: string;
+  endDate: string;
 }
 
-const EventCard = ({ 
+const EventCard = ({
   id,
-  title, 
-  date, 
-  time, 
-  location, 
-  description, 
-  sponsor, 
-  capacity, 
-  registered, 
+  title,
+  date,
+  time,
+  location,
+  description,
+  sponsor,
+  capacity,
+  registered,
   image,
   startDate,
   endDate
 }: EventCardProps) => {
-  const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
-  
-  const spotsLeft = capacity - registered;
-  const isAlmostFull = spotsLeft <= 10;
-  
-  const handleRegister = async () => {
+
+  useEffect(() => {
+    if (user) {
+      checkRegistration();
+    }
+  }, [user, id]);
+
+  const checkRegistration = async () => {
+    if (!user) return;
+
     try {
-      setIsRegistering(true);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Connexion requise",
-          description: "Vous devez être connecté pour vous inscrire à un événement.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('event_registrations')
-        .insert({
-          event_id: id,
-          user_id: user.id
-        });
+        .select('id')
+        .eq('event_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) {
-        if (error.code === '23505') {
-          toast({
-            title: "Déjà inscrit",
-            description: "Vous êtes déjà inscrit à cet événement.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
+      if (error) throw error;
+      setIsRegistered(!!data);
+    } catch (error) {
+      console.error('Error checking registration:', error);
+    }
+  };
+
+  const handleRegistration = async () => {
+    if (!user) {
+      toast({
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour vous inscrire à un événement.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (isRegistered) {
+        // Désinscrire
+        const { error } = await supabase
+          .from('event_registrations')
+          .delete()
+          .eq('event_id', id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        setIsRegistered(false);
+        toast({
+          title: "Désinscription réussie",
+          description: "Vous avez été désinscrit de l'événement.",
+        });
       } else {
+        // Inscrire
+        const { error } = await supabase
+          .from('event_registrations')
+          .insert({
+            event_id: id,
+            user_id: user.id
+          });
+
+        if (error) throw error;
+
         setIsRegistered(true);
         toast({
-          title: "Inscription réussie !",
-          description: "Vous êtes maintenant inscrit à cet événement de 3 jours.",
+          title: "Inscription réussie",
+          description: "Vous êtes maintenant inscrit à l'événement.",
         });
       }
     } catch (error) {
+      console.error('Error with registration:', error);
       toast({
-        title: "Erreur d'inscription",
+        title: "Erreur",
         description: "Une erreur est survenue lors de l'inscription.",
         variant: "destructive",
       });
     } finally {
-      setIsRegistering(false);
+      setIsLoading(false);
     }
   };
 
-  const formatDateRange = () => {
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      return `Du ${start.toLocaleDateString('fr-FR')} au ${end.toLocaleDateString('fr-FR')}`;
-    }
-    return date;
-  };
-  
+  const isEventPast = new Date(endDate) < new Date();
+  const isFull = registered >= capacity;
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="relative">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="aspect-video overflow-hidden">
         <img 
           src={image} 
           alt={title}
-          className="w-full h-40 object-cover"
+          className="w-full h-full object-cover"
         />
-        {isAlmostFull && (
-          <Badge className="absolute top-2 right-2 bg-orange-500">
-            Places limitées
-          </Badge>
-        )}
       </div>
       
       <CardHeader>
-        <CardTitle className="text-xl">{title}</CardTitle>
-        {sponsor && (
-          <p className="text-sm text-muted-foreground">
-            Parrainé par <span className="font-semibold">{sponsor}</span>
-          </p>
-        )}
+        <div className="flex justify-between items-start mb-2">
+          <CardTitle className="text-xl">{title}</CardTitle>
+          {sponsor && (
+            <Badge variant="secondary" className="text-xs">
+              {sponsor}
+            </Badge>
+          )}
+        </div>
+        
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2" />
+            {date}
+          </div>
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2" />
+            {time}
+          </div>
+          <div className="flex items-center">
+            <MapPin className="h-4 w-4 mr-2" />
+            {location}
+          </div>
+          <div className="flex items-center">
+            <Users className="h-4 w-4 mr-2" />
+            {registered}/{capacity} participants
+          </div>
+        </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="h-4 w-4 text-primary" />
-          <span>{formatDateRange()}</span>
-        </div>
-        
-        <div className="flex items-center gap-2 text-sm">
-          <Clock className="h-4 w-4 text-primary" />
-          <span>Événement de 3 jours complets</span>
-        </div>
-        
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4 text-primary" />
-          <span>{location}</span>
-        </div>
-        
-        <div className="flex items-center gap-2 text-sm">
-          <Users className="h-4 w-4 text-primary" />
-          <span>{registered}/{capacity} inscrits</span>
-        </div>
-        
-        <p className="text-sm text-muted-foreground line-clamp-3">
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
           {description}
         </p>
         
-        <div className="flex gap-2 pt-2">
-          <Button 
-            className="flex-1" 
-            onClick={handleRegister}
-            disabled={isRegistering || isRegistered || spotsLeft === 0}
-          >
-            {isRegistering ? "Inscription..." : isRegistered ? "Inscrit ✓" : spotsLeft === 0 ? "Complet" : "S'inscrire (3 jours)"}
-          </Button>
-          
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                Détails
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>{title}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <img src={image} alt={title} className="w-full h-48 object-cover rounded-lg" />
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold mb-2">Dates</h4>
-                    <p className="text-sm">{formatDateRange()}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Lieu</h4>
-                    <p className="text-sm">{location}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Capacité</h4>
-                    <p className="text-sm">{registered}/{capacity} participants</p>
-                  </div>
-                  {sponsor && (
-                    <div>
-                      <h4 className="font-semibold mb-2">Parrain</h4>
-                      <p className="text-sm">{sponsor}</p>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Description</h4>
-                  <p className="text-sm">{description}</p>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-primary h-2 rounded-full transition-all duration-300"
+                style={{ width: `${Math.min((registered / capacity) * 100, 100)}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {Math.round((registered / capacity) * 100)}%
+            </span>
+          </div>
+        </div>
+        
+        <div className="mt-4">
+          {isEventPast ? (
+            <Badge variant="outline" className="w-full justify-center">
+              Événement terminé
+            </Badge>
+          ) : isFull ? (
+            <Badge variant="destructive" className="w-full justify-center">
+              Complet
+            </Badge>
+          ) : (
+            <Button 
+              onClick={handleRegistration}
+              disabled={isLoading}
+              variant={isRegistered ? "outline" : "default"}
+              className="w-full"
+            >
+              {isLoading ? (
+                "Traitement..."
+              ) : isRegistered ? (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Inscrit - Cliquer pour se désinscrire
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  S'inscrire
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
